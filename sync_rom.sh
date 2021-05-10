@@ -3,13 +3,12 @@
 set -exv
 
 # Init Repo
-repo init --no-repo-verify --depth=1 -u https://github.com/AOSPA/manifest -b ruby -g default,-device,-mips,-darwin,-notdefault
+repo init --depth=1 -u git:///github.com/Wave-Project/manifest -b r -g default,-device,-mips,-darwin,-notdefault
 
 # Device sources
-git clone https://github.com/AOSPA-Sakura/sakura_local_manifests .repo/local_manifests
-
-# TMP fix for sync fail
-rm -rf cts
+git clone https://github.com/krishiv8190/device_xiaomi_sakura-2 device/xiaomi/sakura
+git clone https://github.com/geopd/vendor_xiaomi_sakura vendor/xiaomi
+git clone https://github.com/darkhz/revvz_sakura kernel/xiaomi/msm8953
 
 # Sync Repo
 repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j$(nproc --all)
