@@ -1,28 +1,26 @@
-  
 task:
   name: Build
   persistent_worker: {}
+  timeout_in: 4h
   env:
     USE_CCACHE: 1
-    CIRRUS_WORKING_DIR: /tmp/$CIRRUS_REPO_NAME
-  env_script:
-    - env
-  clone_script:
-    - repo init --depth=1 -u git:///github.com/Wave-Project/manifest -b r
+    ROM_NAME: "grep init sync_rom.sh | cut -d / -f 4"
+    PATH: "~/bin:$PATH"
   sync_script:
-    - rm -rf .repo/local_manifests || true
-    - git clone https://github.com/krishiv8190/device_xiaomi_sakura-2 device/xiaomi/sakura
-    - git clone https://github.com/geopd/vendor_xiaomi_sakura vendor/xiaomi
-    - git clone https://github.com/darkhz/revvz_sakura kernel/xiaomi/msm8953
-    - repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j$(nproc --all)
+    - mkdir -p ~/$(bash -c "$ROM_NAME")
+    - cd ~/$(bash -c "$ROM_NAME")
+    - rm -rf .repo/local_manifests
+    - bash $CIRRUS_WORKING_DIR/sync_rom.sh
   build_script:
-    - source build/envsetup.sh
-    - brunch sakura
+    - ccache -z
+    - cd ~/$(bash -c "$ROM_NAME")
+    - bash $CIRRUS_WORKING_DIR/build_rom.sh
   ccache_stats_script:
     - ccache -s
-  upload_script: |
-    up() {
-      curl --upload-file $1 https://transfer.sh/$(basename $1); echo
-      # 14 days, 10 GB limit
-    }
-    up out/target/product/sakura/*.zip
+  upload_script:
+    - cd ~/$(bash -c "$ROM_NAME")
+    - bash $CIRRUS_WORKING_DIR/upload_rom.sh
+  remove_script:
+    - cd ~/$(bash -c "$ROM_NAME")
+    - rm -rf .repo/local_manifests
+    - rm -rf out/target/product/$(grep unch $CIRRUS_WORKING_DIR/build_rom.sh | cut -d _ -f 2 | cut -d - -f 1)/*.zip
