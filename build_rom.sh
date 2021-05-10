@@ -3,4 +3,4 @@
 set -exv
 
 # Build
-./rom-build.sh sakura -i
+source build/envsetup.sh
